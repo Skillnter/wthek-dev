@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WTHek | RFC 7807/9457 Problem Details & HTTP Error Architecture</title>
+  <meta name="description" content="Interactive documentation, RFC 9457 Problem Details playground, framework recipe generator, and HTTP status code explorer for @wthek and http-error-kit.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- PrismJS for Syntax Highlighting -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+    pre[class*="language-"] {
+      margin: 0;
+      border-radius: 0.5rem;
+      background: #090d16 !important;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+    }
+    code[class*="language-"] {
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+</head>
+<body class="bg-[#0b0f19] text-slate-100 font-sans antialiased selection:bg-indigo-500 selection:text-white min-h-screen flex flex-col">
+
+  <!-- Navbar -->
+  <header class="sticky top-0 z-50 backdrop-blur-md bg-[#0b0f19]/80 border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center font-bold text-lg text-white shadow-lg shadow-indigo-500/20">
+          W
+        </div>
+        <div class="flex flex-col">
+          <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">WTHek</span>
+          <span class="text-[10px] text-indigo-400 font-mono -mt-1 tracking-wider uppercase">http-error-kit</span>
+        </div>
+        <span class="ml-2 hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-950/80 text-indigo-300 border border-indigo-800/60">
+          v1.5.0 • RFC 9457
+        </span>
+      </div>
+
+      <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-slate-300">
+        <a href="#playground" class="hover:text-indigo-400 transition-colors flex items-center gap-1.5">
+          <i data-lucide="play" class="w-4 h-4"></i> Playground
+        </a>
+        <a href="#recipes" class="hover:text-indigo-400 transition-colors flex items-center gap-1.5">
+          <i data-lucide="code" class="w-4 h-4"></i> Framework Recipes
+        </a>
+        <a href="#status-codes" class="hover:text-indigo-400 transition-colors flex items-center gap-1.5">
+          <i data-lucide="compass" class="w-4 h-4"></i> Status Explorer
+        </a>
+        <a href="#ecosystem" class="hover:text-indigo-400 transition-colors flex items-center gap-1.5">
+          <i data-lucide="box" class="w-4 h-4"></i> Ecosystem
+        </a>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <a href="https://github.com/Skillnter/http-error-kit" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700/80 transition shadow-sm">
+          <i data-lucide="github" class="w-4 h-4"></i>
+          <span>GitHub</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="relative overflow-hidden pt-12 pb-16 lg:pt-20 lg:pb-24 border-b border-slate-800/60">
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(99,102,241,0.18),rgba(255,255,255,0))]"></div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-950/60 border border-indigo-800/70 text-indigo-300 text-xs font-medium mb-6">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        RFC 7807 & RFC 9457 Compliant Error Architecture for Node.js & AI Agents
+      </div>
+
+      <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white max-w-4xl mx-auto leading-tight">
+        Never return <span class="bg-gradient-to-r from-red-400 to-rose-400 bg-clip-text text-transparent font-mono">{ error: "msg" }</span> again.
+      </h1>
+
+      <p class="mt-6 text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto font-normal">
+        Standardized, RFC-compliant Problem Details, zero-mutation error pipelines, validation transformers, and MCP diagnostics across every Node.js framework.
+      </p>
+
+      <!-- Quick Install Box -->
+      <div class="mt-8 max-w-md mx-auto bg-slate-900/90 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between shadow-2xl backdrop-blur-sm">
+        <div class="flex items-center gap-2 px-2 text-xs font-mono text-slate-300 truncate">
+          <span class="text-indigo-400 select-none">$</span>
+          <span id="installCmdText">npm install http-error-kit</span>
+        </div>
+        <button id="copyInstallBtn" onclick="copyInstallCmd()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition flex items-center gap-1.5 flex-shrink-0">
+          <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+          <span id="copyInstallLabel">Copy</span>
+        </button>
+      </div>
+
+      <!-- Feature Badges -->
+      <div class="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto text-left">
+        <div class="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800/80">
+          <div class="flex items-center gap-2 text-indigo-400 font-semibold text-sm">
+            <i data-lucide="shield-check" class="w-4 h-4"></i> RFC 9457
+          </div>
+          <p class="text-xs text-slate-400 mt-1">Full standard Problem Details with zero schema drift.</p>
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800/80">
+          <div class="flex items-center gap-2 text-emerald-400 font-semibold text-sm">
+            <i data-lucide="cpu" class="w-4 h-4"></i> 6 Frameworks
+          </div>
+          <p class="text-xs text-slate-400 mt-1">Express, Fastify, Hono, Koa, NestJS, Restify.</p>
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800/80">
+          <div class="flex items-center gap-2 text-amber-400 font-semibold text-sm">
+            <i data-lucide="bot" class="w-4 h-4"></i> Agent Ready
+          </div>
+          <p class="text-xs text-slate-400 mt-1">Native MCP server, `.cursorrules`, and agent skills.</p>
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800/80">
+          <div class="flex items-center gap-2 text-cyan-400 font-semibold text-sm">
+            <i data-lucide="zap" class="w-4 h-4"></i> Zero Deps
+          </div>
+          <p class="text-xs text-slate-400 mt-1">Ultra-lightweight core with instant start times.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive RFC 9457 Playground -->
+  <section id="playground" class="py-16 border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+        <div>
+          <div class="flex items-center gap-2 text-indigo-400 text-xs font-mono uppercase tracking-wider">
+            <i data-lucide="sparkles" class="w-4 h-4"></i> Live Sandbox
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-bold text-white mt-1">Interactive RFC 9457 Playground</h2>
+          <p class="text-slate-400 text-sm mt-1 max-w-2xl">
+            Simulate HTTP error generation and inspect the RFC 7807/9457 Problem Details JSON payload emitted by <code class="text-indigo-300 font-mono">http-error-kit</code> in real time.
+          </p>
+        </div>
+
+        <!-- Scenario Quick Select -->
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-xs text-slate-400 font-medium">Presets:</span>
+          <button onclick="loadScenario('validation')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs font-mono text-slate-200 border border-slate-700 transition">422 Validation</button>
+          <button onclick="loadScenario('notfound')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs font-mono text-slate-200 border border-slate-700 transition">404 Not Found</button>
+          <button onclick="loadScenario('unauthorized')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs font-mono text-slate-200 border border-slate-700 transition">401 Unauthorized</button>
+          <button onclick="loadScenario('ratelimit')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs font-mono text-slate-200 border border-slate-700 transition">429 Rate Limit</button>
+        </div>
+      </div>
+
+      <!-- Playground Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Control Panel (5 cols) -->
+        <div class="lg:col-span-5 bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
+          <h3 class="text-sm font-semibold text-slate-200 flex items-center justify-between">
+            <span>Error Configuration</span>
+            <span class="text-[11px] font-mono text-indigo-400">KitHttpError Config</span>
+          </h3>
+
+          <div class="space-y-3 text-xs">
+            <div>
+              <label class="block text-slate-400 font-medium mb-1">HTTP Status Code</label>
+              <select id="pgStatus" onchange="updatePlayground()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-indigo-500 font-mono">
+                <option value="422">422 Unprocessable Content</option>
+                <option value="400">400 Bad Request</option>
+                <option value="401">401 Unauthorized</option>
+                <option value="403">403 Forbidden</option>
+                <option value="404">404 Not Found</option>
+                <option value="409">409 Conflict</option>
+                <option value="429">429 Too Many Requests</option>
+                <option value="500">500 Internal Server Error</option>
+                <option value="503">503 Service Unavailable</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-slate-400 font-medium mb-1">Title (Short Summary)</label>
+              <input id="pgTitle" type="text" value="Unprocessable Content" oninput="updatePlayground()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-indigo-500">
+            </div>
+
+            <div>
+              <label class="block text-slate-400 font-medium mb-1">Detail (Specific Occurrence Explanation)</label>
+              <textarea id="pgDetail" rows="2" oninput="updatePlayground()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-indigo-500">The requested user object failed validation checks for required fields 'email' and 'age'.</textarea>
+            </div>
+
+            <div>
+              <label class="block text-slate-400 font-medium mb-1">Instance (Request Endpoint URI)</label>
+              <input id="pgInstance" type="text" value="/api/v1/users/register" oninput="updatePlayground()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 font-mono focus:outline-none focus:border-indigo-500">
+            </div>
+
+            <div>
+              <label class="block text-slate-400 font-medium mb-1">Type URI (Documentation Link)</label>
+              <input id="pgType" type="text" value="https://wthek.dev/errors/validation-failed" oninput="updatePlayground()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 font-mono focus:outline-none focus:border-indigo-500">
+            </div>
+
+            <div class="pt-2 border-t border-slate-800 flex items-center justify-between">
+              <label class="text-slate-400 font-medium cursor-pointer flex items-center gap-2">
+                <input id="pgIncludeValidation" type="checkbox" checked onchange="updatePlayground()" class="rounded bg-slate-950 border-slate-800 text-indigo-600 focus:ring-0">
+                Include Validation Details (Zod/Valibot)
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Output JSON Panel (7 cols) -->
+        <div class="lg:col-span-7 flex flex-col bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+          <div class="px-4 py-3 bg-slate-950/70 border-b border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+              <span class="text-xs font-mono text-slate-400 ml-2">Content-Type: application/problem+json</span>
+            </div>
+            <button onclick="copyPlaygroundOutput()" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 transition flex items-center gap-1.5">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              <span id="copyPgLabel">Copy JSON</span>
+            </button>
+          </div>
+          <div class="p-4 flex-1 bg-[#090d16] overflow-x-auto">
+            <pre><code id="playgroundCode" class="language-json"></code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Framework Recipe Builder -->
+  <section id="recipes" class="py-16 border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="mb-8">
+        <div class="flex items-center gap-2 text-indigo-400 text-xs font-mono uppercase tracking-wider">
+          <i data-lucide="cpu" class="w-4 h-4"></i> Production Boilerplate Generator
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-bold text-white mt-1">Framework Recipe Builder</h2>
+        <p class="text-slate-400 text-sm mt-1 max-w-2xl">
+          Select your HTTP runtime and companion validation engine to get tested, copy-paste error middleware code and export 1-click agent configuration files.
+        </p>
+      </div>
+
+      <!-- Selectors -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <!-- Framework Selection -->
+        <div class="p-4 rounded-xl bg-slate-900/70 border border-slate-800">
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-3">1. Select HTTP Framework</label>
+          <div class="grid grid-cols-3 gap-2">
+            <button onclick="selectFramework('express')" data-framework="express" class="fw-btn py-2 px-3 rounded-lg text-xs font-medium border border-indigo-500/80 bg-indigo-950/40 text-indigo-200 transition">Express</button>
+            <button onclick="selectFramework('fastify')" data-framework="fastify" class="fw-btn py-2 px-3 rounded-lg text-xs font-medium border border-slate-800 bg-slate-950 text-slate-300 hover:bg-slate-800 transition">Fastify</button>
+            <button onclick="selectFramework('hono')" data-framework="hono" class="fw-btn py-2 px-3 rounded-lg text-xs font-medium border border-slate-800 bg-slate-950 text-slate-300 hover:bg-slate-800 transition">Hono</button>
+            <button onclick="selectFramework('koa')" data-framework="koa" class="fw-btn py-2 px-3 rounded-lg text-xs font-medium border border-slate-800 bg-slate-950 text-slate-300 hover:bg-slate-800 transition">Koa</button>
+            <button onclick="selectFramework('nestjs')" data-framework="nestjs" class="fw-btn py-2 px-3 rounded-lg text-xs font-medium border border-slate-800 bg-slate-950 text-slate-300 hover:bg-slate-800 transition">NestJS</button>
+            <button onclick="selectFramework('restify')" data-framework="restify" class="fw-btn py-2 px-3 rounded-lg text-xs font-medium border border-slate-800 bg-slate-950 text-slate-300 hover:bg-slate-800 transition">Restify</button>
+          </div>
+        </div>
+
+        <!-- Validator Selection -->
+        <div class="p-4 rounded-xl bg-slate-900/70 border border-slate-800">
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-3">2. Select Validation Engine</label>
+          <div class="grid grid-cols-4 gap-2">
+            <button onclick="selectValidator('zod')" data-validator="zod" class="val-btn py-2 px-3 rounded-lg text-xs font-medium border border-indigo-500/80 bg-indigo-950/40 text-indigo-200 transition">Zod</button>
+            <button onclick="selectValidator('typebox')" data-validator="typebox" class="val-btn py-2 px-3 rounded-lg text-xs font-medium border border-slate-800 bg-slate-950 text-slate-300 hover:bg-slate-800 transition">TypeBox</button>
+            <button onclick="selectValidator('valibot')" data-validator="valibot" class="val-btn py-2 px-3 rounded-lg text-xs font-medium border border-slate-800 bg-slate-950 text-slate-300 hover:bg-slate-800 transition">Valibot</button>
+            <button onclick="selectValidator('none')" data-validator="none" class="val-btn py-2 px-3 rounded-lg text-xs font-medium border border-slate-800 bg-slate-950 text-slate-300 hover:bg-slate-800 transition">None</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generated Recipe Box -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+        <div class="px-5 py-3.5 bg-slate-950 border-b border-slate-800 flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <span id="recipeTitle" class="text-sm font-semibold text-white">Express + Zod Configuration</span>
+            <span id="recipePackagesBadge" class="text-[11px] font-mono text-indigo-400 bg-indigo-950/80 px-2 py-0.5 rounded border border-indigo-800/60">4 Packages</span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="copyRecipeCode()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 transition flex items-center gap-1.5 border border-slate-700">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              <span id="copyRecipeLabel">Copy Recipe</span>
+            </button>
+            <button onclick="downloadCursorRules()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i>
+              <span>Download .cursorrules</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="p-4 bg-[#090d16] overflow-x-auto">
+          <pre><code id="recipeCode" class="language-typescript"></code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HTTP Status Code Explorer -->
+  <section id="status-codes" class="py-16 border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+        <div>
+          <div class="flex items-center gap-2 text-indigo-400 text-xs font-mono uppercase tracking-wider">
+            <i data-lucide="compass" class="w-4 h-4"></i> Standards Explorer
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-bold text-white mt-1">HTTP Status Code Explorer</h2>
+          <p class="text-slate-400 text-sm mt-1 max-w-2xl">
+            Complete, searchable status code directory powered by <code class="text-indigo-300 font-mono">http-response-status-code</code>. Includes required RFC response headers and companion error class mapping.
+          </p>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="relative w-full md:w-80">
+          <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+          <input id="statusSearch" type="text" placeholder="Search by code or phrase (e.g. 404, Teapot, Not Found)..." oninput="filterStatusCodes()" class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition">
+        </div>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div class="flex flex-wrap items-center gap-2 mb-6">
+        <button onclick="setStatusCategory('all')" data-cat="all" class="cat-btn px-3 py-1 rounded-full text-xs font-medium bg-indigo-600 text-white transition">All</button>
+        <button onclick="setStatusCategory('4xx')" data-cat="4xx" class="cat-btn px-3 py-1 rounded-full text-xs font-medium bg-slate-800 text-slate-300 hover:bg-slate-700 transition">4xx Client Errors</button>
+        <button onclick="setStatusCategory('5xx')" data-cat="5xx" class="cat-btn px-3 py-1 rounded-full text-xs font-medium bg-slate-800 text-slate-300 hover:bg-slate-700 transition">5xx Server Errors</button>
+        <button onclick="setStatusCategory('2xx')" data-cat="2xx" class="cat-btn px-3 py-1 rounded-full text-xs font-medium bg-slate-800 text-slate-300 hover:bg-slate-700 transition">2xx Success</button>
+        <button onclick="setStatusCategory('3xx')" data-cat="3xx" class="cat-btn px-3 py-1 rounded-full text-xs font-medium bg-slate-800 text-slate-300 hover:bg-slate-700 transition">3xx Redirection</button>
+      </div>
+
+      <!-- Status Code Grid -->
+      <div id="statusGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Rendered via JavaScript -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Complete Ecosystem (15 Packages) -->
+  <section id="ecosystem" class="py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="mb-10 text-center max-w-3xl mx-auto">
+        <div class="flex items-center justify-center gap-2 text-indigo-400 text-xs font-mono uppercase tracking-wider">
+          <i data-lucide="layers" class="w-4 h-4"></i> Complete Portfolio
+        </div>
+        <h2 class="text-3xl font-bold text-white mt-1">The 15 Packages of @wthek</h2>
+        <p class="text-slate-400 text-sm mt-2">
+          Modular, single-responsibility libraries engineered for zero bloat and maximum interoperability.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Core Group -->
+        <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 space-y-3">
+          <div class="flex items-center gap-2 text-indigo-400 font-semibold text-sm">
+            <i data-lucide="shield" class="w-4 h-4"></i> Core Foundation
+          </div>
+          <ul class="space-y-2.5 text-xs">
+            <li class="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800/80">
+              <span class="font-mono text-indigo-300 font-semibold">http-error-kit</span>
+              <p class="text-slate-400 mt-0.5">Core RFC 7807/9457 error architecture & KitHttpError primitives.</p>
+            </li>
+            <li class="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800/80">
+              <span class="font-mono text-indigo-300 font-semibold">http-response-status-code</span>
+              <p class="text-slate-400 mt-0.5">Canonical RFC 9110 status codes, headers, and metadata mappings.</p>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Middlewares Group -->
+        <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 space-y-3">
+          <div class="flex items-center gap-2 text-emerald-400 font-semibold text-sm">
+            <i data-lucide="server" class="w-4 h-4"></i> Framework Middlewares
+          </div>
+          <ul class="space-y-2 text-xs">
+            <li class="p-2 rounded-lg bg-slate-950/80 border border-slate-800/80">
+              <span class="font-mono text-emerald-300 font-semibold">@wthek/express-middleware</span>
+            </li>
+            <li class="p-2 rounded-lg bg-slate-950/80 border border-slate-800/80">
+              <span class="font-mono text-emerald-300 font-semibold">@wthek/fastify-middleware</span>
+            </li>
+            <li class="p-2 rounded-lg bg-slate-950/80 border border-slate-800/80">
+              <span class="font-mono text-emerald-300 font-semibold">@wthek/hono-middleware</span>
+            </li>
+            <li class="p-2 rounded-lg bg-slate-950/80 border border-slate-800/80">
+              <span class="font-mono text-emerald-300 font-semibold">@wthek/koa-middleware</span>
+            </li>
+            <li class="p-2 rounded-lg bg-slate-950/80 border border-slate-800/80">
+              <span class="font-mono text-emerald-300 font-semibold">@wthek/nestjs-middleware</span>
+            </li>
+            <li class="p-2 rounded-lg bg-slate-950/80 border border-slate-800/80">
+              <span class="font-mono text-emerald-300 font-semibold">@wthek/restify-middleware</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Validation & AI Diagnostics -->
+        <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 space-y-3">
+          <div class="flex items-center gap-2 text-amber-400 font-semibold text-sm">
+            <i data-lucide="bot" class="w-4 h-4"></i> Transformers & AI MCP
+          </div>
+          <ul class="space-y-2 text-xs">
+            <li class="p-2 rounded-lg bg-slate-950/80 border border-slate-800/80">
+              <span class="font-mono text-amber-300 font-semibold">@wthek/zod-transformer</span>
+            </li>
+            <li class="p-2 rounded-lg bg-slate-950/80 border border-slate-800/80">
+              <span class="font-mono text-amber-300 font-semibold">@wthek/zod-express-interceptor</span>
+            </li>
+            <li class="p-2 rounded-lg bg-slate-950/80 border border-slate-800/80">
+              <span class="font-mono text-amber-300 font-semibold">@wthek/typebox-transformer</span>
+            </li>
+            <li class="p-2 rounded-lg bg-slate-950/80 border border-slate-800/80">
+              <span class="font-mono text-amber-300 font-semibold">@wthek/valibot-transformer</span>
+            </li>
+            <li class="p-2 rounded-lg bg-slate-950/80 border border-slate-800/80">
+              <span class="font-mono text-amber-300 font-semibold">@wthek/mcp</span>
+            </li>
+            <li class="p-2 rounded-lg bg-slate-950/80 border border-slate-800/80">
+              <span class="font-mono text-amber-300 font-semibold">@wthek/mcp-error-formatter</span>
+            </li>
+            <li class="p-2 rounded-lg bg-slate-950/80 border border-slate-800/80">
+              <span class="font-mono text-amber-300 font-semibold">@wthek/error-handling</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="mt-auto border-t border-slate-800 bg-[#070a11] py-8 text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <div class="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-xs text-white">W</div>
+        <span class="font-medium text-slate-400">WTHek & http-error-kit Ecosystem</span>
+        <span>•</span>
+        <span>MIT Licensed</span>
+      </div>
+      <div class="flex items-center gap-6">
+        <a href="https://github.com/Skillnter" target="_blank" class="hover:text-indigo-400 transition">GitHub Organization</a>
+        <a href="https://www.npmjs.com/package/http-error-kit" target="_blank" class="hover:text-indigo-400 transition">npm Registry</a>
+        <a href="https://github.com/sponsors/Skillnter" target="_blank" class="hover:text-rose-400 transition flex items-center gap-1">
+          <i data-lucide="heart" class="w-3.5 h-3.5 text-rose-500"></i> Sponsor
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Application Logic -->
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // 1. Copy Install Command
+    function copyInstallCmd() {
+      const text = document.getElementById('installCmdText').innerText;
+      navigator.clipboard.writeText(text);
+      const label = document.getElementById('copyInstallLabel');
+      label.innerText = 'Copied!';
+      setTimeout(() => label.innerText = 'Copy', 2000);
+    }
+
+    // 2. Interactive Playground Logic
+    const scenarios = {
+      validation: {
+        status: "422",
+        title: "Unprocessable Content",
+        detail: "The requested user object failed validation checks for required fields 'email' and 'age'.",
+        instance: "/api/v1/users/register",
+        type: "https://wthek.dev/errors/validation-failed",
+        includeValidation: true
+      },
+      notfound: {
+        status: "404",
+        title: "Not Found",
+        detail: "No resource was found with identifier 'usr_84920492'.",
+        instance: "/api/v1/users/usr_84920492",
+        type: "https://wthek.dev/errors/resource-not-found",
+        includeValidation: false
+      },
+      unauthorized: {
+        status: "401",
+        title: "Unauthorized",
+        detail: "Bearer token signature expired at 2026-11-24T22:15:00Z.",
+        instance: "/api/v1/billing/invoices",
+        type: "https://wthek.dev/errors/token-expired",
+        includeValidation: false
+      },
+      ratelimit: {
+        status: "429",
+        title: "Too Many Requests",
+        detail: "Exceeded rate limit allowance of 100 requests per minute. Retry after 42 seconds.",
+        instance: "/api/v1/ai/generate",
+        type: "https://wthek.dev/errors/rate-limit-exceeded",
+        includeValidation: false
+      }
+    };
+
+    function loadScenario(name) {
+      const s = scenarios[name];
+      if (!s) return;
+      document.getElementById('pgStatus').value = s.status;
+      document.getElementById('pgTitle').value = s.title;
+      document.getElementById('pgDetail').value = s.detail;
+      document.getElementById('pgInstance').value = s.instance;
+      document.getElementById('pgType').value = s.type;
+      document.getElementById('pgIncludeValidation').checked = s.includeValidation;
+      updatePlayground();
+    }
+
+    function updatePlayground() {
+      const status = parseInt(document.getElementById('pgStatus').value, 10);
+      const title = document.getElementById('pgTitle').value;
+      const detail = document.getElementById('pgDetail').value;
+      const instance = document.getElementById('pgInstance').value;
+      const type = document.getElementById('pgType').value;
+      const incVal = document.getElementById('pgIncludeValidation').checked;
+
+      const payload = {
+        type,
+        title,
+        status,
+        detail,
+        instance
+      };
+
+      if (incVal) {
+        payload.invalidParams = [
+          {
+            name: "email",
+            reason: "Must be a valid email address string",
+            code: "invalid_string"
+          },
+          {
+            name: "age",
+            reason: "Expected number >= 18, received 14",
+            code: "too_small"
+          }
+        ];
+      }
+
+      const formatted = JSON.stringify(payload, null, 2);
+      const codeEl = document.getElementById('playgroundCode');
+      codeEl.textContent = formatted;
+      Prism.highlightElement(codeEl);
+    }
+
+    function copyPlaygroundOutput() {
+      const code = document.getElementById('playgroundCode').textContent;
+      navigator.clipboard.writeText(code);
+      const label = document.getElementById('copyPgLabel');
+      label.innerText = 'Copied!';
+      setTimeout(() => label.innerText = 'Copy JSON', 2000);
+    }
+
+    // 3. Framework Recipe Builder Logic
+    let currentFramework = 'express';
+    let currentValidator = 'zod';
+
+    const recipes = {
+      express: {
+        zod: {
+          title: "Express + Zod Configuration",
+          packages: ["@wthek/express-middleware", "@wthek/zod-express-interceptor", "http-error-kit", "zod"],
+          code: `import express from "express";
+import { KitExpressMiddleware } from "@wthek/express-middleware";
+import { KitZodExpressInterceptor } from "@wthek/zod-express-interceptor";
+import { z } from "zod";
+
+const app = express();
+app.use(express.json());
+
+// 1. Application routes with Zod schema validation
+const UserSchema = z.object({
+  email: z.string().email(),
+  name: z.string().min(2)
+});
+
+app.post("/api/users", (req, res, next) => {
+  try {
+    const data = UserSchema.parse(req.body);
+    res.status(201).json({ success: true, data });
+  } catch (err) {
+    next(err); // Forward to interceptor
+  }
+});
+
+// 2. Intercept Zod validation errors and convert them to RFC 7807/9457 KitHttpErrors
+app.use(KitZodExpressInterceptor());
+
+// 3. Centralized error middleware (MUST be registered last)
+app.use(KitExpressMiddleware({ handleUnknownErrors: true, log: true }));
+
+app.listen(3000, () => console.log("Express API running on port 3000"));`
+        },
+        typebox: {
+          title: "Express + TypeBox Configuration",
+          packages: ["@wthek/express-middleware", "@wthek/typebox-transformer", "http-error-kit", "@sinclair/typebox"],
+          code: `import express from "express";
+import { KitExpressMiddleware } from "@wthek/express-middleware";
+import { transformTypeBoxErrors } from "@wthek/typebox-transformer";
+import { Type } from "@sinclair/typebox";
+import { Value } from "@sinclair/typebox/value";
+
+const app = express();
+app.use(express.json());
+
+const UserSchema = Type.Object({
+  email: Type.String({ format: "email" }),
+  age: Type.Number({ minimum: 18 })
+});
+
+app.post("/api/users", (req, res, next) => {
+  const errors = [...Value.Errors(UserSchema, req.body)];
+  if (errors.length > 0) {
+    return next(transformTypeBoxErrors(errors));
+  }
+  res.status(201).json({ status: "created" });
+});
+
+app.use(KitExpressMiddleware({ handleUnknownErrors: true, log: true }));`
+        },
+        valibot: {
+          title: "Express + Valibot Configuration",
+          packages: ["@wthek/express-middleware", "@wthek/valibot-transformer", "http-error-kit", "valibot"],
+          code: `import express from "express";
+import { KitExpressMiddleware } from "@wthek/express-middleware";
+import { transformValibotIssues } from "@wthek/valibot-transformer";
+import * as v from "valibot";
+
+const app = express();
+app.use(express.json());
+
+const UserSchema = v.object({
+  email: v.pipe(v.string(), v.email()),
+  name: v.pipe(v.string(), v.minLength(2))
+});
+
+app.post("/api/users", (req, res, next) => {
+  const result = v.safeParse(UserSchema, req.body);
+  if (!result.success) {
+    return next(transformValibotIssues(result.issues));
+  }
+  res.status(201).json({ status: "created" });
+});
+
+app.use(KitExpressMiddleware({ handleUnknownErrors: true, log: true }));`
+        },
+        none: {
+          title: "Express Middleware Configuration",
+          packages: ["@wthek/express-middleware", "http-error-kit"],
+          code: `import express from "express";
+import { KitExpressMiddleware } from "@wthek/express-middleware";
+import { NotFoundError } from "http-error-kit";
+
+const app = express();
+app.use(express.json());
+
+app.get("/api/example", (req, res) => {
+  throw new NotFoundError("Requested entity could not be found.");
+});
+
+// Centralized error handler
+app.use(KitExpressMiddleware({ handleUnknownErrors: true, log: true }));`
+        }
+      },
+      fastify: {
+        zod: {
+          title: "Fastify + Zod Configuration",
+          packages: ["@wthek/fastify-middleware", "@wthek/zod-transformer", "http-error-kit", "zod"],
+          code: `import Fastify from "fastify";
+import { KitFastifyMiddleware } from "@wthek/fastify-middleware";
+import { transformZodError } from "@wthek/zod-transformer";
+import { z } from "zod";
+
+const app = Fastify({ logger: true });
+
+// Register @wthek centralized error handler
+KitFastifyMiddleware(app, { handleUnknownErrors: true, log: true });
+
+const QuerySchema = z.object({ id: z.string().uuid() });
+
+app.get("/items", async (request, reply) => {
+  const parsed = QuerySchema.safeParse(request.query);
+  if (!parsed.success) {
+    throw transformZodError(parsed.error);
+  }
+  return { status: "ok" };
+});
+
+await app.listen({ port: 3000 });`
+        },
+        none: {
+          title: "Fastify Middleware Configuration",
+          packages: ["@wthek/fastify-middleware", "http-error-kit"],
+          code: `import Fastify from "fastify";
+import { KitFastifyMiddleware } from "@wthek/fastify-middleware";
+import { UnauthorizedError } from "http-error-kit";
+
+const app = Fastify();
+KitFastifyMiddleware(app, { handleUnknownErrors: true, log: true });
+
+app.get("/protected", async () => {
+  throw new UnauthorizedError("Session has expired");
+});
+
+await app.listen({ port: 3000 });`
+        }
+      },
+      hono: {
+        zod: {
+          title: "Hono + Zod Configuration",
+          packages: ["@wthek/hono-middleware", "@wthek/zod-transformer", "http-error-kit", "zod"],
+          code: `import { Hono } from "hono";
+import { KitHonoMiddleware } from "@wthek/hono-middleware";
+import { transformZodError } from "@wthek/zod-transformer";
+import { z } from "zod";
+
+const app = new Hono();
+
+// Global RFC 9457 Problem Details error boundary
+app.onError(KitHonoMiddleware({ log: true }));
+
+const Schema = z.object({ search: z.string().min(3) });
+
+app.get("/search", (c) => {
+  const parsed = Schema.safeParse(c.req.query());
+  if (!parsed.success) {
+    throw transformZodError(parsed.error);
+  }
+  return c.json({ result: [] });
+});
+
+export default app;`
+        },
+        none: {
+          title: "Hono Middleware Configuration",
+          packages: ["@wthek/hono-middleware", "http-error-kit"],
+          code: `import { Hono } from "hono";
+import { KitHonoMiddleware } from "@wthek/hono-middleware";
+import { BadRequestError } from "http-error-kit";
+
+const app = new Hono();
+app.onError(KitHonoMiddleware({ log: true }));
+
+app.get("/check", () => {
+  throw new BadRequestError("Missing query parameters");
+});
+
+export default app;`
+        }
+      },
+      koa: {
+        zod: {
+          title: "Koa + Zod Configuration",
+          packages: ["@wthek/koa-middleware", "@wthek/zod-transformer", "http-error-kit", "zod"],
+          code: `import Koa from "koa";
+import { KitKoaMiddleware } from "@wthek/koa-middleware";
+import { transformZodError } from "@wthek/zod-transformer";
+import { z } from "zod";
+
+const app = new Koa();
+
+// Register as the very first middleware to catch downstream exceptions
+app.use(KitKoaMiddleware({ handleUnknownErrors: true, log: true }));
+
+app.use(async (ctx) => {
+  const schema = z.object({ id: z.number() });
+  const parsed = schema.safeParse(ctx.query);
+  if (!parsed.success) {
+    throw transformZodError(parsed.error);
+  }
+  ctx.body = { status: "ok" };
+});
+
+app.listen(3000);`
+        },
+        none: {
+          title: "Koa Middleware Configuration",
+          packages: ["@wthek/koa-middleware", "http-error-kit"],
+          code: `import Koa from "koa";
+import { KitKoaMiddleware } from "@wthek/koa-middleware";
+import { ForbiddenError } from "http-error-kit";
+
+const app = new Koa();
+app.use(KitKoaMiddleware({ handleUnknownErrors: true, log: true }));
+
+app.use(async () => {
+  throw new ForbiddenError("Insufficient account permissions");
+});
+
+app.listen(3000);`
+        }
+      },
+      nestjs: {
+        zod: {
+          title: "NestJS + Zod Exception Filter",
+          packages: ["@wthek/nestjs-middleware", "@wthek/zod-transformer", "http-error-kit", "zod"],
+          code: `import { Module } from "@nestjs/common";
+import { APP_FILTER } from "@nestjs/core";
+import { KitNestjsExceptionFilter } from "@wthek/nestjs-middleware";
+
+@Module({
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: KitNestjsExceptionFilter,
+    },
+  ],
+})
+export class AppModule {}`
+        },
+        none: {
+          title: "NestJS Global Filter",
+          packages: ["@wthek/nestjs-middleware", "http-error-kit"],
+          code: `import { NestFactory } from "@nestjs/core";
+import { KitNestjsExceptionFilter } from "@wthek/nestjs-middleware";
+import { AppModule } from "./app.module";
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  app.useGlobalFilters(new KitNestjsExceptionFilter({ handleUnknownErrors: true }));
+  await app.listen(3000);
+}
+bootstrap();`
+        }
+      },
+      restify: {
+        none: {
+          title: "Restify Error Formatter Configuration",
+          packages: ["@wthek/restify-middleware", "http-error-kit"],
+          code: `import restify from "restify";
+import { registerKitRestifyFormatters } from "@wthek/restify-middleware";
+import { NotFoundError } from "http-error-kit";
+
+const server = restify.createServer();
+registerKitRestifyFormatters(server);
+
+server.get("/items/:id", (req, res, next) => {
+  return next(new NotFoundError("Item not found"));
+});
+
+server.listen(8080);`
+        }
+      }
+    };
+
+    function selectFramework(fw) {
+      currentFramework = fw;
+      document.querySelectorAll('.fw-btn').forEach(btn => {
+        if (btn.getAttribute('data-framework') === fw) {
+          btn.className = 'fw-btn py-2 px-3 rounded-lg text-xs font-medium border border-indigo-500/80 bg-indigo-950/40 text-indigo-200 transition';
+        } else {
+          btn.className = 'fw-btn py-2 px-3 rounded-lg text-xs font-medium border border-slate-800 bg-slate-950 text-slate-300 hover:bg-slate-800 transition';
+        }
+      });
+      renderRecipe();
+    }
+
+    function selectValidator(val) {
+      currentValidator = val;
+      document.querySelectorAll('.val-btn').forEach(btn => {
+        if (btn.getAttribute('data-validator') === val) {
+          btn.className = 'val-btn py-2 px-3 rounded-lg text-xs font-medium border border-indigo-500/80 bg-indigo-950/40 text-indigo-200 transition';
+        } else {
+          btn.className = 'val-btn py-2 px-3 rounded-lg text-xs font-medium border border-slate-800 bg-slate-950 text-slate-300 hover:bg-slate-800 transition';
+        }
+      });
+      renderRecipe();
+    }
+
+    function renderRecipe() {
+      const fwData = recipes[currentFramework] || recipes.express;
+      const data = fwData[currentValidator] || fwData['none'] || recipes.express.zod;
+
+      document.getElementById('recipeTitle').innerText = data.title;
+      document.getElementById('recipePackagesBadge').innerText = data.packages.length + ' Packages: ' + data.packages.join(', ');
+      
+      const codeEl = document.getElementById('recipeCode');
+      codeEl.textContent = data.code;
+      Prism.highlightElement(codeEl);
+    }
+
+    function copyRecipeCode() {
+      const code = document.getElementById('recipeCode').textContent;
+      navigator.clipboard.writeText(code);
+      const label = document.getElementById('copyRecipeLabel');
+      label.innerText = 'Copied!';
+      setTimeout(() => label.innerText = 'Copy Recipe', 2000);
+    }
+
+    function downloadCursorRules() {
+      const content = `# WTHek Architecture Rules for ${currentFramework.toUpperCase()}
+- Format ALL API errors using RFC 7807/9457 Problem Details.
+- Never return raw \`{ error: "message" }\` JSON structures.
+- Use \`@wthek/${currentFramework}-middleware\` and \`http-error-kit\` classes (NotFoundError, BadRequestError, etc.).
+- Ensure validation pipelines transform field errors using standard invalidParams format.
+- Use HTTP status constants from \`http-response-status-code\`.`;
+
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '.cursorrules';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // 4. HTTP Status Codes Data & Explorer
+    const statusCodes = [
+      { code: 200, name: "OK", rfc: "RFC 9110", cat: "2xx", desc: "Standard response for successful HTTP requests.", headers: ["ETag", "Content-Type"] },
+      { code: 201, name: "Created", rfc: "RFC 9110", cat: "2xx", desc: "Request succeeded and led to resource creation.", headers: ["Location", "ETag"] },
+      { code: 204, name: "No Content", rfc: "RFC 9110", cat: "2xx", desc: "Request succeeded, no body returned in response.", headers: [] },
+      { code: 301, name: "Moved Permanently", rfc: "RFC 9110", cat: "3xx", desc: "Target resource has been assigned a new permanent URI.", headers: ["Location", "Cache-Control"] },
+      { code: 304, name: "Not Modified", rfc: "RFC 9110", cat: "3xx", desc: "Conditional GET verified resource is fresh.", headers: ["ETag", "Cache-Control"] },
+      { code: 400, name: "Bad Request", rfc: "RFC 9110", cat: "4xx", desc: "Malformed syntax or invalid request framing.", errorClass: "BadRequestError", headers: [] },
+      { code: 401, name: "Unauthorized", rfc: "RFC 9110", cat: "4xx", desc: "Authentication credentials missing or invalid.", errorClass: "UnauthorizedError", headers: ["WWW-Authenticate"] },
+      { code: 403, name: "Forbidden", rfc: "RFC 9110", cat: "4xx", desc: "Server understood credentials but denies access.", errorClass: "ForbiddenError", headers: [] },
+      { code: 404, name: "Not Found", rfc: "RFC 9110", cat: "4xx", desc: "Target origin server has no current representation.", errorClass: "NotFoundError", headers: [] },
+      { code: 405, name: "Method Not Allowed", rfc: "RFC 9110", cat: "4xx", desc: "Target resource does not support method.", errorClass: "MethodNotAllowedError", headers: ["Allow"] },
+      { code: 409, name: "Conflict", rfc: "RFC 9110", cat: "4xx", desc: "Conflict with current state of target resource.", errorClass: "ConflictError", headers: [] },
+      { code: 410, name: "Gone", rfc: "RFC 9110", cat: "4xx", desc: "Target resource was permanently deleted.", errorClass: "GoneError", headers: [] },
+      { code: 422, name: "Unprocessable Content", rfc: "RFC 9110", cat: "4xx", desc: "Semantic or validation validation failure in payload.", errorClass: "UnprocessableEntityError", headers: [] },
+      { code: 429, name: "Too Many Requests", rfc: "RFC 6585", cat: "4xx", desc: "Client sent too many requests in given timeframe.", errorClass: "TooManyRequestsError", headers: ["Retry-After"] },
+      { code: 500, name: "Internal Server Error", rfc: "RFC 9110", cat: "5xx", desc: "Server encountered an unexpected condition.", errorClass: "InternalServerError", headers: [] },
+      { code: 502, name: "Bad Gateway", rfc: "RFC 9110", cat: "5xx", desc: "Invalid response from upstream inbound gateway.", errorClass: "BadGatewayError", headers: [] },
+      { code: 503, name: "Service Unavailable", rfc: "RFC 9110", cat: "5xx", desc: "Server currently overloaded or down for maintenance.", errorClass: "ServiceUnavailableError", headers: ["Retry-After"] },
+      { code: 504, name: "Gateway Timeout", rfc: "RFC 9110", cat: "5xx", desc: "Timed out waiting for upstream gateway response.", errorClass: "GatewayTimeoutError", headers: [] }
+    ];
+
+    let currentCategory = 'all';
+
+    function setStatusCategory(cat) {
+      currentCategory = cat;
+      document.querySelectorAll('.cat-btn').forEach(btn => {
+        if (btn.getAttribute('data-cat') === cat) {
+          btn.className = 'cat-btn px-3 py-1 rounded-full text-xs font-medium bg-indigo-600 text-white transition';
+        } else {
+          btn.className = 'cat-btn px-3 py-1 rounded-full text-xs font-medium bg-slate-800 text-slate-300 hover:bg-slate-700 transition';
+        }
+      });
+      renderStatusCodes();
+    }
+
+    function filterStatusCodes() {
+      renderStatusCodes();
+    }
+
+    function renderStatusCodes() {
+      const q = (document.getElementById('statusSearch').value || '').toLowerCase().trim();
+      const grid = document.getElementById('statusGrid');
+      grid.innerHTML = '';
+
+      const filtered = statusCodes.filter(item => {
+        const matchesCat = currentCategory === 'all' || item.cat === currentCategory;
+        const matchesQuery = !q || item.code.toString().includes(q) || item.name.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q) || (item.errorClass && item.errorClass.toLowerCase().includes(q));
+        return matchesCat && matchesQuery;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '<div class="col-span-full py-8 text-center text-slate-500 text-sm">No HTTP status codes match your filter query.</div>';
+        return;
+      }
+
+      filtered.forEach(item => {
+        let badgeColor = 'bg-slate-800 text-slate-300 border-slate-700';
+        if (item.cat === '2xx') badgeColor = 'bg-emerald-950/80 text-emerald-300 border-emerald-800/60';
+        if (item.cat === '3xx') badgeColor = 'bg-cyan-950/80 text-cyan-300 border-cyan-800/60';
+        if (item.cat === '4xx') badgeColor = 'bg-amber-950/80 text-amber-300 border-amber-800/60';
+        if (item.cat === '5xx') badgeColor = 'bg-rose-950/80 text-rose-300 border-rose-800/60';
+
+        const card = document.createElement('div');
+        card.className = 'p-4 rounded-xl bg-slate-900/60 border border-slate-800/90 hover:border-slate-700 transition flex flex-col justify-between';
+        
+        let headerBadges = item.headers.length > 0
+          ? item.headers.map(h => `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-950 text-indigo-300 border border-slate-800">${h}</span>`).join(' ')
+          : '<span class="text-[10px] text-slate-600 font-mono">None</span>';
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between gap-2">
+              <span class="font-mono font-bold text-lg text-white">${item.code}</span>
+              <span class="px-2 py-0.5 rounded text-[11px] font-semibold border ${badgeColor}">${item.cat.toUpperCase()}</span>
+            </div>
+            <h4 class="text-sm font-semibold text-slate-200 mt-1">${item.name}</h4>
+            <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">${item.desc}</p>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-slate-800/80 space-y-2 text-[11px]">
+            ${item.errorClass ? `
+              <div class="flex items-center justify-between">
+                <span class="text-slate-500">Error Class:</span>
+                <code class="font-mono text-indigo-300">${item.errorClass}</code>
+              </div>
+            ` : ''}
+            <div class="flex items-center justify-between">
+              <span class="text-slate-500">Headers:</span>
+              <div class="flex gap-1">${headerBadges}</div>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // Initial Renders
+    updatePlayground();
+    renderRecipe();
+    renderStatusCodes();
+  </script>
+</body>
+</html>
